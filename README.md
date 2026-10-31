@@ -13,7 +13,7 @@ This repository is curated by instructors to provide student-tested, industry-re
 | Lab # | Lab Title | Core Technologies | Status | Directory |
 | :--- | :--- | :--- | :--- | :--- |
 | **Lab 01** | **Implement Azure App Services** | App Service Plans, Deployment Slots, Autoscaling | ✅ Ready | [`Lab-01-Azure-App-Services/`](./Lab-01-Azure-App-Services/) |
-| **Lab 02** | **Implement Azure Container Instances (ACI)** | Serverless Containers, Docker Images, Public DNS | 🔄 In Progress | [`Lab-02-Azure-Container-Instances/`](./Lab-02-Azure-Container-Instances/) |
+| **Lab 02** | **Implement Azure Container Instances (ACI)** | Serverless Containers, Docker Images, Public DNS | ✅ Ready | [`Lab-02-Azure-Container-Instances/`](./Lab-02-Azure-Container-Instances/) |
 | **Lab 03** | **Implement Azure Container Apps (ACA)** | Microservices, Container Apps Environment, Ingress | ⏳ Upcoming | [`Lab-03-Azure-Container-Apps/`](./Lab-03-Azure-Container-Apps/) |
 
 ---
