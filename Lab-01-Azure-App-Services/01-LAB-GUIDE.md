@@ -3,7 +3,7 @@
 ## Lab Overview & Scenario
 In this lab, you will evaluate Azure App Service as a Platform-as-a-Service (PaaS) solution to host and scale web applications without managing underlying virtual machines or operating systems. 
 
-You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a Linux-based PHP Web App inside your dedicated instructor resource group (`abdullah-rg9`). You will configure a staging deployment slot for zero-downtime updates, deploy application code, perform a slot swap into production, configure **Automatic scaling** with burst limits, and run an integrated **Azure Load Test** through App Service Diagnostics.
+You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a Linux-based PHP Web App inside your dedicated resource group. You will configure a staging deployment slot for zero-downtime updates, deploy application code, perform a slot swap into production, configure **Automatic scaling** with burst limits, and run an integrated **Azure Load Test** through App Service Diagnostics.
 
 ---
 
@@ -17,15 +17,19 @@ You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a
 
 ---
 
-## 🏷️ Standard Lab Naming Convention
+## 🏷️ Suggested Naming Conventions for Students
 
-| Resource Type | Resource Name Example | Description |
-| :--- | :--- | :--- |
-| **Resource Group** | **`abdullah-rg9`** *(or `abdullah-rg-appservice`)* | Dedicated resource group for Lab 01 |
-| **App Service Plan** | **`abdullah-asp`** | Premium V3 P1V3 compute plan |
-| **Web App Name** | **`abdullahapp<unique-number>`** *(e.g. `abdullahapp222`)* | Globally unique public web endpoint |
-| **Deployment Slot** | **`staging`** | Secondary deployment testing slot |
-| **Load Test Resource** | **`abdullah-loadtest`** | Diagnostic performance testing engine |
+> 💡 **Important for Students:**  
+> The names below are **suggested templates**. Wherever you see placeholders like `<your-name>` or `<your-app-name>`, substitute your own initials, name, or student ID.  
+> *Note:* Web App names must be **globally unique across all of Azure** worldwide.
+
+| Resource Type | Suggested Pattern | Example (e.g., Instructor Abdullah) | Description |
+| :--- | :--- | :--- | :--- |
+| **Resource Group** | `<your-name>-rg9` | `abdullah-rg9` | Dedicated resource group for Lab 01 |
+| **App Service Plan** | `<your-name>-asp` | `abdullah-asp` | Premium V3 P1V3 compute plan |
+| **Web App Name** | `<your-name>-app<unique#>` | `abdullahapp222` | Must be globally unique across Azure |
+| **Deployment Slot** | `staging` | `staging` | Secondary testing slot |
+| **Load Test Resource** | `<your-name>-loadtest` | `abdullah-loadtest` | Diagnostic performance testing engine |
 
 ---
 
@@ -43,8 +47,8 @@ You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a
 | Setting | Value |
 | :--- | :--- |
 | **Subscription** | Select your active Azure subscription |
-| **Resource group** | Select **Create new** $\rightarrow$ enter **`abdullah-rg9`** |
-| **Name** | Enter a globally unique name: **`abdullahapp<unique-number>`** (e.g., `abdullahapp222`) |
+| **Resource group** | Select **Create new** $\rightarrow$ enter **`<your-name>-rg9`** *(e.g., `abdullah-rg9`)* |
+| **Name** | Enter a globally unique name: **`<your-name>-app<unique#>`** *(e.g., `abdullahapp222`)* |
 | **Publish** | **Code** |
 | **Runtime stack** | **PHP 8.2** |
 | **Operating system** | **Linux** |
@@ -67,10 +71,10 @@ You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a
    * **Clone settings from:** `Do not clone settings`
 4. Click **Add**.
 5. Once created, click **Close**. Notice that both slots are now listed:
-   * `abdullahapp222` (Traffic: 100% - Production)
-   * `abdullahapp222-staging` (Traffic: 0% - Staging)
+   * `<your-app-name>` (Traffic: 100% - Production)
+   * `<your-app-name>-staging` (Traffic: 0% - Staging)
 6. Click directly on the newly created **staging** slot entry to open its management blade.
-   * *Verify at the top breadcrumb that you are working on the staging slot (`abdullahapp222/staging`).*
+   * *Verify at the top breadcrumb that you are working on the staging slot (`<your-app-name>/staging`).*
 
 ---
 
@@ -107,23 +111,23 @@ You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a
 ```powershell
 Set-Content -Path index.php -Value "<?php echo '<h1>Hello World from Staging Slot!</h1>'; ?>"
 Compress-Archive -Path index.php -DestinationPath app.zip -Force
-az webapp deploy --resource-group abdullah-rg9 --name <your-app-name> --slot staging --src-path app.zip --type zip
+az webapp deploy --resource-group <your-resource-group> --name <your-app-name> --slot staging --src-path app.zip --type zip
 ```
-*(Replace `<your-app-name>` with your actual app name, e.g. `abdullahapp222`; do not add `/staging`).*
+*(Replace `<your-resource-group>` and `<your-app-name>` with your actual names; do not add `/staging`).*
 
 ---
 
 ### Step 3.3: Verify Staging Deployment
 1. On the **staging slot** blade, click **Overview**.
-2. Click the **Default domain** link (e.g., `https://abdullahapp222-staging.azurewebsites.net`).
+2. Click the **Default domain** link (e.g., `https://<your-app-name>-staging.azurewebsites.net`).
 3. Verify that the browser displays: **Hello World!**
 
 ---
 
 ## Task 4: Swap deployment slots
 
-1. Navigate back to your main Web App blade (click your main app name `abdullahapp222` in the top breadcrumb navigation).
-2. Under **Overview**, click the **Default domain** URL (`https://abdullahapp222.azurewebsites.net`).
+1. Navigate back to your main Web App blade (click your main app name in the top breadcrumb navigation).
+2. Under **Overview**, click the **Default domain** URL (`https://<your-app-name>.azurewebsites.net`).
    * *Notice that production still displays the default Azure placeholder page.*
 3. On the left menu under **Deployment**, select **Deployment slots**.
 4. Click the **Swap** button at the top toolbar:
@@ -154,13 +158,13 @@ az webapp deploy --resource-group abdullah-rg9 --name <your-app-name> --slot sta
 1. In the left-hand pane of your main Web App, select **Diagnose and solve problems**.
 2. Scroll to the **Load Test your App** card and select **Create Load Test**.
 3. In the creation wizard:
-   * Enter the name: **`abdullah-loadtest`**.
+   * Enter a test name: **`<your-name>-loadtest`** *(e.g., `abdullah-loadtest`)*.
    * Click **Review + create** $\rightarrow$ **Create**.
 4. Once deployment succeeds, click **Go to resource**.
 5. Under *Overview*, choose **Create by adding HTTP requests** and select **Create**.
 6. On the **Test plan** tab:
    * Click **Add request**.
-   * Paste your web app's **Default domain URL** (`https://abdullahapp222.azurewebsites.net`).
+   * Paste your web app's **Default domain URL** (`https://<your-app-name>.azurewebsites.net`).
    * Click **Add**.
 7. Click **Review + create** and then click **Create**.
 8. Wait for the test execution to complete (about 2–3 minutes).
@@ -184,6 +188,7 @@ To prevent ongoing charges on the Premium V3 tier, delete the resource group whe
 
 1. Open **Azure Cloud Shell** (PowerShell) and run:
    ```powershell
-   Remove-AzResourceGroup -Name "abdullah-rg9" -Force -AsJob
+   Remove-AzResourceGroup -Name "<your-resource-group>" -Force -AsJob
    ```
-2. Or in the Azure Portal, open the resource group **`abdullah-rg9`**, click **Delete resource group**, enter its name, and confirm.
+   *(e.g., `Remove-AzResourceGroup -Name "abdullah-rg9" -Force -AsJob`)*
+2. Or in the Azure Portal, open your resource group, click **Delete resource group**, enter its name, and confirm.

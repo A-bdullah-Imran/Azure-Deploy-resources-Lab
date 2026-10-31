@@ -20,11 +20,11 @@ An **App Service Plan** represents the compute units allocated to run your appli
 
 ```
 +-------------------------------------------------------------+
-|                     App Service Plan: abdullah-asp          |
+|                     App Service Plan: <your-name>-asp       |
 |  Region: East US | SKU: Premium V3 P1V3 (1 vCPU, 4 GB RAM)  |
 |                                                             |
 |   +-----------------------+     +------------------------+  |
-|   | Web App: abdullahapp  |     | Slot: abdullahapp-stag |  |
+|   | Web App: Production   |     | Slot: Staging          |  |
 |   | (Traffic: 100%)       |     | (Traffic: 0%)          |  |
 |   +-----------------------+     +------------------------+  |
 |               \                             /               |
@@ -60,7 +60,7 @@ This is one of the most frequently tested concepts on the AZ-104 exam. Students 
 | **Virtual Network Integration** | ❌ No | ✅ **YES (Sticky)** |
 | **IP Restrictions & Access Rules** | ❌ No | ✅ **YES (Sticky)** |
 
-> 💡 **Instructor Tip:** Notice why this makes sense! Your production domain (`www.company.com` or `abdullahapp222.azurewebsites.net`) should **never** follow code into staging; it must remain pointing to production!
+> 💡 **Instructor Tip:** Notice why this makes sense! Your production domain (`www.company.com` or `<your-app>.azurewebsites.net`) should **never** follow code into staging; it must remain pointing to production!
 
 ---
 
@@ -81,32 +81,34 @@ Autoscaling dynamically adjusts the number of compute instances running your app
 
 ---
 
-## 🛠️ 4. Quick Reference: Instructor Azure CLI Cheatsheet
+## 🛠️ 4. Quick Reference: Azure CLI Cheatsheet
+
+> *Note: Replace `<your-resource-group>` (e.g., `abdullah-rg9`) and `<your-app-name>` (e.g., `abdullahapp222`) with your own values.*
 
 ```bash
-# 1. Create Instructor Resource Group
-az group create --name abdullah-rg9 --location eastus
+# 1. Create Resource Group
+az group create --name <your-resource-group> --location eastus
 
 # 2. Create an App Service Plan (Premium V3 P1V3)
-az appservice plan create --name abdullah-asp --resource-group abdullah-rg9 --sku P1V3 --is-linux
+az appservice plan create --name <your-name>-asp --resource-group <your-resource-group> --sku P1V3 --is-linux
 
 # 3. Create Web App (PHP 8.2 runtime)
-az webapp create --resource-group abdullah-rg9 --plan abdullah-asp --name abdullahapp222 --runtime "PHP|8.2"
+az webapp create --resource-group <your-resource-group> --plan <your-name>-asp --name <your-app-name> --runtime "PHP|8.2"
 
 # 4. Create Staging Deployment Slot
-az webapp deployment slot create --resource-group abdullah-rg9 --name abdullahapp222 --slot staging
+az webapp deployment slot create --resource-group <your-resource-group> --name <your-app-name> --slot staging
 
 # 5. Enable "Always On" & Basic Auth on Staging Slot
-az webapp config set --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --always-on true
+az webapp config set --resource-group <your-resource-group> --name <your-app-name> --slot staging --always-on true
 
 # 6. Deploy Zip Package directly to Slot (OneDeploy)
-az webapp deploy --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --src-path app.zip --type zip
+az webapp deploy --resource-group <your-resource-group> --name <your-app-name> --slot staging --src-path app.zip --type zip
 
 # 7. Perform Zero-Downtime Slot Swap
-az webapp deployment slot swap --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --target-slot production
+az webapp deployment slot swap --resource-group <your-resource-group> --name <your-app-name> --slot staging --target-slot production
 
 # 8. Clean up all lab resources
-az group delete --name abdullah-rg9 --yes --no-wait
+az group delete --name <your-resource-group> --yes --no-wait
 ```
 
 ---
