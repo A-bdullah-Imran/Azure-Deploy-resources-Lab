@@ -87,7 +87,7 @@ az container create \
   --image mcr.microsoft.com/azuredocs/aci-helloworld:latest \
   --dns-name-label <your-dns-label> \
   --ports 80 \
-  --restart-policy OnFailure
+  --restart-policy Always
 
 # 2. View live streaming container logs
 az container logs \

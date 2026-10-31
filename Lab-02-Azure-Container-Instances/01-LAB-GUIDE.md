@@ -3,15 +3,14 @@
 ## Lab Overview & Scenario
 In this lab, you will evaluate **Azure Container Instances (ACI)** as a serverless container solution. ACI allows you to run Docker containers in the cloud within seconds without provisioning, configuring, or managing underlying virtual machines or container orchestrators (like Kubernetes).
 
-You will deploy a containerized web application using a public Docker container image, configure public networking with a custom DNS name label, test the application through a web browser, and inspect live container logs and console sessions.
+You will deploy a containerized web application using a public Docker container image, configure public networking with a custom DNS name label, test the application through a web browser, and inspect the incoming HTTP GET request logs in the Azure Portal.
 
 ---
 
-## 🎯 Lab Objectives
+## 🎯 Official Lab Objectives
 * **Task 1:** Deploy an Azure Container Instance using a Docker image.
-* **Task 2:** Review the functionality and lifecycle of the Azure Container Instance *(includes the HTTP vs. HTTPS browser trap)*.
-* **Task 3:** Inspect container logs and open an interactive bash console.
-* **Task 4:** Clean up lab resources.
+* **Task 2:** Review the functionality of the Azure Container Instance *(includes HTTP vs. HTTPS browser tip)*.
+* **Task 3:** Clean up resources.
 
 ---
 
@@ -21,7 +20,7 @@ You will deploy a containerized web application using a public Docker container 
 > The names below are **suggested templates**. Wherever you see placeholders like `<your-name>` or `<your-dns-label>`, substitute your own initials, name, or student ID.  
 > *Note:* The DNS Name Label must be **globally unique across all of Azure** in that region.
 
-| Resource Type | Suggested Pattern | Example (e.g., Instructor Abdullah) | Description |
+| Setting | Suggested Pattern | Example (e.g., Instructor Abdullah) | Description |
 | :--- | :--- | :--- | :--- |
 | **Resource Group** | `<your-name>-rg9b` | `abdullah-rg9b` | Dedicated resource group for Lab 02 |
 | **Container Name** | `<your-name>-c1` | `abdullah-c1` | Name of the container instance |
@@ -30,16 +29,15 @@ You will deploy a containerized web application using a public Docker container 
 
 ---
 
-## ⏱️ Estimated Time: 15–20 minutes
+## ⏱️ Estimated Time: 15 minutes
 
 ---
 
-## Task 1: Deploy an Azure Container Instance
+## Task 1: Deploy an Azure Container Instance using a Docker image
 
 1. Sign in to the **Azure Portal** ([https://portal.azure.com](https://portal.azure.com)).
-2. In the top search bar, search for and select **Container instances**.
-3. On the Container instances blade, click **+ Create**.
-4. On the **Basics** tab, configure the following settings:
+2. In the Azure portal, search for and select **Container instances** and then, on the Container instances blade, click **+ Create**.
+3. On the **Basics** tab of the *Create container instance* blade, specify the following settings (leave others with their default values):
 
 | Setting | Value |
 | :--- | :--- |
@@ -50,98 +48,52 @@ You will deploy a containerized web application using a public Docker container 
 | **Image source** | **Quickstart images** |
 | **Image** | **`mcr.microsoft.com/azuredocs/aci-helloworld:latest (Linux)`** |
 
-5. Select the **Networking** tab and configure:
+4. Click **Next: Networking >** and specify the following settings (leave others with their default values):
 
 | Setting | Value |
 | :--- | :--- |
-| **Networking type** | **Public** |
-| **DNS name label** | Enter a globally unique label: **`<your-name>-aci-<unique#>`** *(e.g., `abdullah-aci-222`)* |
-| **Ports** | Keep default: **Port `80`**, Protocol **`TCP`** |
+| **DNS name label** | Enter a globally unique DNS hostname: **`<your-name>-aci-<unique#>`** *(e.g., `abdullah-aci-222`)* |
 
-6. Select the **Advanced** tab:
-   * **Restart policy:** Select **On failure** *(or keep default Always)*.
-   * Leave environment variables empty.
-7. Click **Review + create**, verify that validation passes, and then click **Create**.
-8. Wait for the deployment to finish (typically 30–60 seconds), then click **Go to resource**.
+> 📌 **Note:** Your container will be publicly reachable at `http://<your-dns-label>.<region>.azurecontainer.io`.
+
+5. Click **Next: Advanced >**, review the settings on the Advanced tab of the Create container instance blade without making any changes.
+6. Click **Review + Create**, ensure that validation passed, and click **Create**.
+7. Wait for the deployment to complete (about 1 minute), then click **Go to resource**.
 
 ---
 
-## Task 2: Review Container Functionality & The HTTP Trap
+## Task 2: Review the functionality of the Azure Container Instance
 
-1. On the container instance **Overview** blade, verify that:
-   * **Status:** Displays **Running**.
-   * **Provisioning state:** Displays **Succeeded**.
-   * Locate the **FQDN** (e.g., `<your-dns-label>.<region>.azurecontainer.io`).
-   * Locate the **IP address** (Public IP).
+1. On the **Overview** blade of your deployed container instance, verify that the **Status** is reported as **Running**.
+2. Copy the **FQDN** (e.g., `<your-dns-label>.<region>.azurecontainer.io`).
 
 ---
 
-### ⚠️ Critical Instructor Warning: The Browser HTTPS Trap!
-> **Student Alert:** Modern browsers (Chrome, Edge, Brave, Safari) automatically force `https://` in the address bar.  
-> Because this sample container only listens on **HTTP Port 80** and has no SSL certificate, navigating to `https://...` will immediately fail with:  
+### ⚠️ Critical Tip for Students: The Browser HTTPS Trap!
+> **Browser Warning:** Modern browsers (Chrome, Edge, Brave) automatically force `https://` in the address bar.  
+> Because this sample container only listens on **HTTP Port 80** and has no SSL certificate, navigating to `https://...` will fail with:  
 > `This site can't be reached` or `Connection refused`.
-
-2. Open a new web browser tab.
-3. In the address bar, explicitly type **`http://`** (without the `s`) followed by your FQDN:
-   ```text
-   http://<your-dns-label>.<region>.azurecontainer.io
-   ```
-   *(Example: `http://abdullah-aci-222.eastus.azurecontainer.io`)*.
-4. Verify that the webpage displays:
-   **"Welcome to Azure Container Instances!"**
-5. *(Optional verification)* You can also visit `http://<Public-IP-Address>` to verify access directly via IP.
-6. Refresh the browser page 3–4 times to generate incoming HTTP request traffic for the next task.
+> 
+> **Action:** In your browser address bar, make sure to explicitly use **`http://`** (without the `s`):  
+> `http://<your-dns-label>.<region>.azurecontainer.io`
 
 ---
 
-## Task 3: Inspect Container Logs & Interactive Console
-
-### Step 3.1: Inspect Container Logs
-1. Return to the Azure Portal on your container instance blade.
-2. In the left navigation menu under **Settings**, select **Containers**.
-3. Click the **Logs** tab:
-   * Notice the Node.js/Alpine Linux startup logs.
-   * Notice the live incoming **`HTTP GET /`** request logs corresponding to your browser refreshes from Task 2.
+3. Open a new browser tab, enter the URL using `http://`, and verify that the **"Welcome to Azure Container Instances!"** page is displayed.
+4. Refresh the browser page several times to generate HTTP `GET` request traffic, then close the browser tab.
+5. Back in the Azure Portal on the container instance blade, in the left-hand navigation menu under **Settings**, select **Containers**.
+6. Select the **Logs** tab:
+   * Verify that you can see the log entries representing the HTTP `GET` requests generated when you refreshed the browser page.
 
 ---
 
-### Step 3.2: Inspect Lifecycle Events
-1. In the same **Containers** blade, select the **Events** tab.
-2. Review the chronological lifecycle events that Azure executed:
-   * `Pulling image "mcr.microsoft.com/azuredocs/aci-helloworld:latest"`
-   * `Successfully pulled image ...`
-   * `Created container ...`
-   * `Started container ...`
+## Task 3: Clean up resources
 
----
+Azure Container Instances bills while in the running state. To avoid ongoing charges:
 
-### Step 3.3: Connect to the Running Container via Interactive Console
-1. In the same **Containers** blade, select the **Connect** tab.
-2. Under **Command**, keep `/bin/sh` selected.
-3. Click **Connect**.
-4. A live terminal prompt (`/usr/src/app #`) will open inside the container.
-5. Run the following Linux inspection commands:
-   ```sh
-   # View running processes inside the container
-   ps aux
-
-   # View the application source files
-   ls -la
-
-   # View the container OS distribution details
-   cat /etc/os-release
-   ```
-6. Once satisfied, you can close the terminal session.
-
----
-
-## Task 4: Clean Up Resources
-
-Azure Container Instances bills per second of execution while the container is running. To avoid incurring subscription charges:
-
-1. Open **Azure Cloud Shell** (PowerShell) and execute:
+1. Open **Azure Cloud Shell** (PowerShell) and run:
    ```powershell
    Remove-AzResourceGroup -Name "<your-resource-group>" -Force -AsJob
    ```
    *(e.g., `Remove-AzResourceGroup -Name "abdullah-rg9b" -Force -AsJob`)*
-2. Or in the Azure Portal, open the resource group, click **Delete resource group**, enter its name, and confirm.
+2. Or in the Azure Portal, open your resource group, click **Delete resource group**, enter its name, and confirm.
