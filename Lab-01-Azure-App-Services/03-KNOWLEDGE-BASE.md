@@ -20,12 +20,12 @@ An **App Service Plan** represents the compute units allocated to run your appli
 
 ```
 +-------------------------------------------------------------+
-|                     App Service Plan                        |
-|  Region: Central India | SKU: Standard S1 (1 Core, 1.75 GB)  |
+|                     App Service Plan: abdullah-asp          |
+|  Region: East US | SKU: Premium V3 P1V3 (1 vCPU, 4 GB RAM)  |
 |                                                             |
 |   +-----------------------+     +------------------------+  |
-|   |   Web App: Production |     |  Web App Slot: Staging |  |
-|   |   (Traffic: 100%)     |     |  (Traffic: 0%)         |  |
+|   | Web App: abdullahapp  |     | Slot: abdullahapp-stag |  |
+|   | (Traffic: 100%)       |     | (Traffic: 0%)          |  |
 |   +-----------------------+     +------------------------+  |
 |               \                             /               |
 |                \                           /                |
@@ -36,7 +36,7 @@ An **App Service Plan** represents the compute units allocated to run your appli
 #### Key Rules of App Service Plans:
 1. **Multi-Tenancy per Plan:** Multiple web apps can share one plan. However, they compete for the same CPU and RAM.
 2. **Region & Subscription Bound:** An App Service Plan belongs to one subscription and one physical Azure region. Any Web App attached to that plan must be created in that exact same region.
-3. **Billing Unit:** You pay for the **App Service Plan**, not the individual Web Apps or Deployment Slots running inside it. If you have 5 web apps in one S1 plan, you pay for one S1 instance.
+3. **Billing Unit:** You pay for the **App Service Plan**, not the individual Web Apps or Deployment Slots running inside it. If you have 5 web apps in one P1v3 plan, you pay for one P1v3 instance.
 
 ---
 
@@ -60,7 +60,7 @@ This is one of the most frequently tested concepts on the AZ-104 exam. Students 
 | **Virtual Network Integration** | ❌ No | ✅ **YES (Sticky)** |
 | **IP Restrictions & Access Rules** | ❌ No | ✅ **YES (Sticky)** |
 
-> 💡 **Instructor Tip:** Notice why this makes sense! Your production domain (`www.company.com`) should **never** follow code into staging; it must remain pointing to production!
+> 💡 **Instructor Tip:** Notice why this makes sense! Your production domain (`www.company.com` or `abdullahapp222.azurewebsites.net`) should **never** follow code into staging; it must remain pointing to production!
 
 ---
 
@@ -68,56 +68,53 @@ This is one of the most frequently tested concepts on the AZ-104 exam. Students 
 
 Autoscaling dynamically adjusts the number of compute instances running your application based on demand.
 
-### Scaling Dimensions
-1. **Scale Up (Vertical):** Changing pricing tiers (e.g., S1 $\rightarrow$ P1v3). Adds more CPU cores, RAM, and advanced features. Causes a momentary container restart.
-2. **Scale Out (Horizontal):** Adding more identical instances (e.g., 1 instance $\rightarrow$ 3 instances). Traffic is automatically load-balanced across all instances using Azure Front Door / Application Gateway technology.
-
-### Anatomy of an Autoscale Rule
-Every autoscale rule consists of:
-* **Metric:** The performance indicator monitored (e.g., `Percentage CPU`, `Memory Percentage`, `Http Queue Length`).
-* **Time Grain (Duration):** How far back Azure looks (e.g., average CPU over the last 10 minutes).
-* **Threshold & Operator:** The trigger condition (e.g., `> 70%` or `< 30%`).
-* **Action:** What to do (e.g., `Increase count by 1` or `Decrease count by 1`).
-* **Cool Down:** Guard time (e.g., 5 minutes) preventing another scale action until the system has stabilized.
+### Scaling Modes in Premium V3
+1. **Automatic Scaling:**  
+   * Introduced in Premium V2/V3 tiers.
+   * Microsoft manages the scaling triggers based on incoming HTTP traffic and health metrics.
+   * Administrators configure:
+     * **Always ready instances (Minimum):** Baseline capacity (e.g., `1`).
+     * **Maximum burst:** The ceiling to prevent unexpected costs (e.g., `2`).
+2. **Rule-Based Scaling (Custom Autoscale):**  
+   * Explicit metric thresholds: e.g., CPU percentage $> 70\%$ adds instances, CPU $< 30\%$ removes instances.
+   * Requires cooldown periods (e.g., 5–10 minutes) to prevent thrashing/flapping.
 
 ---
 
-## 🛠️ 4. Quick Reference: Azure CLI Cheatsheet
-
-Keep this cheatsheet handy for rapid troubleshooting during labs:
+## 🛠️ 4. Quick Reference: Instructor Azure CLI Cheatsheet
 
 ```bash
-# 1. Create a Resource Group
-az group create --name az104-rg9 --location centralindia
+# 1. Create Instructor Resource Group
+az group create --name abdullah-rg9 --location eastus
 
-# 2. Create an App Service Plan (Standard S1)
-az appservice plan create --name myAppPlan --resource-group az104-rg9 --sku S1 --is-linux
+# 2. Create an App Service Plan (Premium V3 P1V3)
+az appservice plan create --name abdullah-asp --resource-group abdullah-rg9 --sku P1V3 --is-linux
 
-# 3. Create a Web App (PHP 8.2 runtime)
-az webapp create --resource-group az104-rg9 --plan myAppPlan --name myApp222 --runtime "PHP|8.2"
+# 3. Create Web App (PHP 8.2 runtime)
+az webapp create --resource-group abdullah-rg9 --plan abdullah-asp --name abdullahapp222 --runtime "PHP|8.2"
 
-# 4. Create a Staging Deployment Slot
-az webapp deployment slot create --resource-group az104-rg9 --name myApp222 --slot staging
+# 4. Create Staging Deployment Slot
+az webapp deployment slot create --resource-group abdullah-rg9 --name abdullahapp222 --slot staging
 
-# 5. Enable "Always On" on Staging Slot
-az webapp config set --resource-group az104-rg9 --name myApp222 --slot staging --always-on true
+# 5. Enable "Always On" & Basic Auth on Staging Slot
+az webapp config set --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --always-on true
 
-# 6. Deploy Zip Package directly to Slot
-az webapp deploy --resource-group az104-rg9 --name myApp222 --slot staging --src-path app.zip --type zip
+# 6. Deploy Zip Package directly to Slot (OneDeploy)
+az webapp deploy --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --src-path app.zip --type zip
 
 # 7. Perform Zero-Downtime Slot Swap
-az webapp deployment slot swap --resource-group az104-rg9 --name myApp222 --slot staging --target-slot production
+az webapp deployment slot swap --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --target-slot production
 
 # 8. Clean up all lab resources
-az group delete --name az104-rg9 --yes --no-wait
+az group delete --name abdullah-rg9 --yes --no-wait
 ```
 
 ---
 
 ## ❓ 5. Frequently Asked Questions (FAQ) & Exam Traps
 
-#### Q1: If I create 4 deployment slots in an S1 plan, will my Azure bill increase?
-**Answer:** **No.** Deployment slots run on the existing compute instances allocated to that App Service Plan. However, because all 4 slots share the same CPU and RAM, excessive load on a staging slot can degrade production performance if your plan does not have sufficient capacity.
+#### Q1: If I create 4 deployment slots in a P1V3 plan, will my Azure bill increase?
+**Answer:** **No.** Deployment slots run on the existing compute instances allocated to that App Service Plan. However, because all slots share the same CPU and RAM, high activity on a staging slot can consume resources needed by production.
 
 #### Q2: What happens if a slot swap fails in the middle of execution?
 **Answer:** Azure will **not** partially complete a swap. If the warm-up requests or health check endpoints return a non-200 code during the swap initialization phase, the entire transaction rolls back, leaving your production site untouched.

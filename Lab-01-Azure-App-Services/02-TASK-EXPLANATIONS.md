@@ -7,21 +7,21 @@ This document provides instructor-level technical context explaining **what** we
 ## 📌 Task 1: Creating an Azure Web App & App Service Plan
 
 ### 1. What is an App Service Plan (ASP)?
-When students create an App Service, they are not just creating a website; they are provisioning an **App Service Plan (ASP)**.
+When students create an App Service, they are not simply creating a website; they are provisioning an **App Service Plan (ASP)**.
 * Think of the **App Service Plan** as the dedicated VM infrastructure (Compute, RAM, Storage, OS, and Region).
-* The **Web App** is the software process running inside that container/VM.
-* Multiple Web Apps can live inside a single App Service Plan and share its computing resources, just like multiple websites on an IIS or Apache web server.
+* The **Web App** is the software process running inside that compute container.
+* Multiple Web Apps can live inside a single App Service Plan and share its computing resources.
 
-### 2. Why did we choose Standard (S1) or Premium V3 instead of Free (F1)?
-| Feature | Free / Shared | Basic (B1) | Standard (S1) | Premium (P1v3) |
+### 2. Why does the lab specify the Premium V3 (P1V3) Tier?
+| Feature | Free (F1) / Shared | Basic (B1) | Standard (S1) | Premium V3 (P1V3) |
 | :--- | :---: | :---: | :---: | :---: |
-| Custom Domains & SSL | ❌ (Free) | ✅ | ✅ | ✅ |
-| **Deployment Slots** | ❌ | ❌ | ✅ (Up to 5) | ✅ (Up to 20) |
-| **Autoscaling** | ❌ | ❌ (Manual only) | ✅ (Up to 10 instances) | ✅ (Up to 30 instances) |
-| Dedicated Compute | ❌ (Shared) | ✅ | ✅ | ✅ |
+| **Compute Architecture** | Shared CPU | Dedicated (v1) | Dedicated (v2) | Hyper-V Isolated (v3 - Fastest SSDs) |
+| **Deployment Slots** | ❌ None | ❌ None | Up to 5 slots | **Up to 20 slots** |
+| **Autoscaling** | ❌ None | ❌ Manual only | Up to 10 instances | **Up to 30 instances + Automatic burst** |
+| **Diagnostics & Integrated Load Testing** | Basic | Basic | Supported | **Full Support** |
 | SLA | None | 99.95% | 99.95% | 99.95% |
 
-> **Key Takeaway for Students:** In AZ-104 questions, if a scenario demands **Deployment Slots** or **Autoscaling based on metrics**, any answer proposing *Basic* or *Free* tiers is immediately incorrect.
+> **Key Takeaway for Students:** In AZ-104 questions, if a scenario demands **Deployment Slots** or **Autoscaling**, any answer proposing *Basic* or *Free* tiers is immediately incorrect. The official lab uses **Premium V3 P1V3** because it is Azure's modern flagship PaaS tier supporting both rapid slot swaps and Automatic Burst scaling.
 
 ---
 
@@ -42,7 +42,7 @@ A deployment slot is **not** a folder inside your web server; it is a **live, fu
 ## 📌 Task 3: Configuring Deployment & The Kudu 503 Fix
 
 ### 1. What is Kudu (SCM)?
-Every Azure Web App has a hidden companion management site called **Kudu** or the **Service Control Manager (SCM)**:
+Every Azure Web App has a companion management site called **Kudu** or the **Service Control Manager (SCM)**:
 * URL format: `https://<your-app>.scm.azurewebsites.net`
 * Kudu handles git deployments, webhooks, deployment logs, background jobs, and console debugging.
 
@@ -57,7 +57,7 @@ This failed with a **503** for three technical reasons:
 
 ### 3. Why did the PowerShell CLI command fix it?
 ```powershell
-az webapp deploy --resource-group az104-rg9 --name <app> --slot staging --src-path app.zip --type zip
+az webapp deploy --resource-group abdullah-rg9 --name abdullahapp222 --slot staging --src-path app.zip --type zip
 ```
 * The `az webapp deploy` command uses **OneDeploy**—Azure's modern unified deployment API.
 * It uploads the zip package directly via authenticated Azure CLI credentials, automatically pings and warms up Kudu before deployment (`Warming up Kudu instance successfully`), and extracts the payload straight into `/home/site/wwwroot` without waiting on an external Git clone handshake.
@@ -96,26 +96,21 @@ flowchart TD
 
 ---
 
-## 📌 Task 5: Autoscaling Rationale & Rule Design
+## 📌 Task 5: Autoscaling Rationale & Integrated Load Testing
 
-### 1. Horizontal Scaling vs Vertical Scaling
-* **Scale Up (Vertical):** Changing the CPU/RAM hardware tier (e.g., upgrading from Basic B1 to Premium P1v3). Requires a brief server reboot.
-* **Scale Out (Horizontal):** Adding more identical worker instances (e.g., increasing instance count from 1 to 3). Zero downtime.
+### 1. Automatic Scaling vs Rule-Based Scaling
+* **Rule-Based Scaling (Legacy/Custom):** Requires manually defining metric conditions (e.g., "if CPU > 70% add 1 instance, if CPU < 30% remove 1 instance").
+* **Automatic Scaling (Modern PaaS feature in Premium V3):** Azure intelligently monitors incoming HTTP traffic and server health. You simply set:
+  * **Always ready instances (Minimum):** The baseline capacity you want running 24/7 (e.g., `1`).
+  * **Maximum burst:** The maximum scale ceiling Azure is allowed to burst out to during traffic spikes (e.g., `2`).
+  * This prevents administrative overhead and protects the organization against runaway scaling costs.
 
-### 2. Why do we need BOTH Scale-out and Scale-in rules?
-* If you only configure a **Scale-Out** rule (e.g., CPU > 70%), Azure will add instances when traffic spikes. But once the traffic subsides, your app will remain at the higher instance count forever, resulting in massive unwanted hosting bills!
-* A **Scale-In** rule (e.g., CPU < 30%) ensures that when traffic normalizes, instances are released back down to your minimum boundary.
+### 2. Testing Autoscaling via App Service Diagnostics (Azure Load Testing)
+* In the official lab, testing is initiated from **Diagnose and solve problems** $\rightarrow$ **Load Test your App**.
+* This triggers an **Azure Load Testing** cloud engine that deploys headless test runners to send concurrent HTTP requests to your web app's Default domain URL.
 
-### 3. Why are Cooldown Periods Critical?
-* A cooldown period (e.g., 5 minutes) tells Azure: *"After adding a new VM instance, wait 5 minutes before evaluating the metrics again."*
-* Without a cooldown, Azure might see high CPU on the old instance before the new instance has fully booted and started taking traffic, causing it to prematurely add another unnecessary instance (a problem called **flapping** or **thrashing**).
-
----
-
-## 📌 Task 6: Performance Testing & The Portal UI Behavior
-
-### Why do students have to re-select the test in the portal?
-In Azure Portal:
-1. Performance tests and Azure Load Testing run as **asynchronous backend jobs**.
-2. When the test begins, the test runner container is deployed in the background.
-3. The parent blade list displays the aggregate historical test jobs. Clicking the specific completed test run opens the **Telemetry Blade**, which pulls live Azure Monitor and Application Insights metrics for that specific job run identifier.
+### 3. Why students must click into the specific test run:
+* Azure Load Testing manages tests in a two-tier hierarchy:
+  1. **Test Definition:** The reusable test plan/template.
+  2. **Test Run:** An immutable execution instance (e.g., Run #1 on 10/31).
+* The parent test blade only displays configuration metadata. Clicking the **individual test run** opens the real-time telemetry dashboard where the student can observe **Virtual Users**, **Response Time**, and **Throughput**.
