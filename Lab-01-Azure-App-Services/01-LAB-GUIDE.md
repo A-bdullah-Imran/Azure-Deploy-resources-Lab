@@ -65,12 +65,12 @@ You will create an App Service Plan on the **Premium V3 P1V3** tier and deploy a
 
 1. On the blade of your newly deployed Web App, under the **Overview** section, click the **Default domain** link to view the default placeholder web page, then close that tab.
 2. Back in the Azure portal, navigate down the left-hand menu to the **Deployment** section and click **Deployment slots**.
-   * *Notice that the web app currently has a single slot labeled `production` with 100% traffic.*
+   * *Notice that by default no slot list is displayed yet—only the option to add a slot.*
 3. Click **+ Add slot** and configure:
    * **Name:** `staging`
    * **Clone settings from:** `Do not clone settings`
 4. Click **Add**.
-5. Once created, click **Close**. Notice that both slots are now listed:
+5. Once created, click **Close**. Notice that now both slots are displayed in the list:
    * `<your-app-name>` (Traffic: 100% - Production)
    * `<your-app-name>-staging` (Traffic: 0% - Staging)
 6. Click directly on the newly created **staging** slot entry to open its management blade.
